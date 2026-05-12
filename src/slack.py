@@ -14,10 +14,14 @@ IMPORTANCE_EMOJI = {"high": ":rotating_light:", "medium": ":bell:", "low": ":inf
 IMPORTANCE_LABEL = {"high": "重要", "medium": "通常", "low": "参考", "spam": "迷惑"}
 IMPORTANCE_ORDER = {"high": 0, "medium": 1, "low": 2, "spam": 3}
 
+MAX_VISIBLE_EMAILS = 20  # Slack の 50 ブロック制限内に収めるため
+
 
 def _build_blocks(result: AnalysisResult, total_fetched: int, model: str) -> list[dict]:
     sorted_analyses = sorted(result.analyses, key=lambda a: IMPORTANCE_ORDER.get(a.importance, 99))
-    visible = [a for a in sorted_analyses if a.importance != "spam"]
+    visible_all = [a for a in sorted_analyses if a.importance != "spam"]
+    visible = visible_all[:MAX_VISIBLE_EMAILS]
+    omitted = len(visible_all) - len(visible)
     spam_count = sum(1 for a in sorted_analyses if a.importance == "spam")
 
     blocks: list[dict] = [
@@ -46,6 +50,11 @@ def _build_blocks(result: AnalysisResult, total_fetched: int, model: str) -> lis
     blocks.append({"type": "divider"})
     for a in visible:
         blocks.extend(_build_email_block(a))
+
+    if omitted > 0:
+        blocks.append(
+            {"type": "section", "text": {"type": "mrkdwn", "text": f":mag: 他 *{omitted}件* (low優先度) は表示省略. Gmailで直接確認."}}
+        )
     return blocks
 
 

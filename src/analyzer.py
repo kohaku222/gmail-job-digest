@@ -14,7 +14,7 @@ from src.gmail_client import Email
 logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
-MAX_TOKENS = 4096
+MAX_TOKENS = 16384
 
 SYSTEM_PROMPT = """あなたは就活中のユーザーのGmail受信トレイを整理するアシスタントです.
 ユーザーから渡される複数のメールを分析し, 各メールについて以下を判定してください.
