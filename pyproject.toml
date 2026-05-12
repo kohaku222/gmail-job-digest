@@ -1,7 +1,7 @@
 [project]
-name = "job-hunting"
+name = "gmail-job-digest"
 version = "0.1.0"
-description = "Add your description here"
+description = "Gmail × Claude × Slack で就活メールを自動要約"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.101.0",
