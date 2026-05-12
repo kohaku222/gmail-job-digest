@@ -2,8 +2,9 @@ name: Job Hunting Email Summary
 
 on:
   schedule:
-    # JST 09:00 = UTC 00:00, JST 17:00 = UTC 08:00
-    - cron: "0 0,8 * * *"
+    # JST 09:13 = UTC 00:13, JST 17:13 = UTC 08:13
+    # 毎時0分は混雑するので :13 にずらして遅延を減らしている
+    - cron: "13 0,8 * * *"
   workflow_dispatch:
 
 permissions:
