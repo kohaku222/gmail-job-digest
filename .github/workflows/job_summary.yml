@@ -2,9 +2,9 @@ name: Job Hunting Email Summary
 
 on:
   schedule:
-    # JST 09:13 = UTC 00:13, JST 17:13 = UTC 08:13
-    # 毎時0分は混雑するので :13 にずらして遅延を減らしている
-    - cron: "13 0,8 * * *"
+    # JST 08:30 = UTC 23:30 (前日), JST 16:30 = UTC 07:30
+    # GitHub Actions cron は最大30分程度遅延するため、9時/17時に確認する前提で30分前倒し
+    - cron: "30 23,7 * * *"
   workflow_dispatch:
 
 permissions:
