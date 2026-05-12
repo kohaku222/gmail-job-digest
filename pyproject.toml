@@ -1,0 +1,12 @@
+[project]
+name = "job-hunting"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.101.0",
+    "google-api-python-client>=2.196.0",
+    "google-auth>=2.52.0",
+    "google-auth-oauthlib>=1.4.0",
+    "requests>=2.34.0",
+]
