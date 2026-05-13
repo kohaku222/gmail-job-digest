@@ -20,7 +20,7 @@ MAX_EMAILS_PER_RUN = 50
 
 REQUIRED_ENV = [
     "GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET", "GMAIL_REFRESH_TOKEN",
-    "ANTHROPIC_API_KEY", "SLACK_WEBHOOK_URL",
+    "ANTHROPIC_API_KEY", "SLACK_BOT_TOKEN", "SLACK_CHANNEL",
 ]
 
 
@@ -63,7 +63,13 @@ def main() -> int:
         result.input_tokens, result.output_tokens, model,
     )
 
-    slack.post(env["SLACK_WEBHOOK_URL"], result, total_fetched=len(emails), model=model)
+    slack.post(
+        bot_token=env["SLACK_BOT_TOKEN"],
+        channel=env["SLACK_CHANNEL"],
+        result=result,
+        total_fetched=len(emails),
+        model=model,
+    )
     _save_state(run_start_unix)
 
     logger.info("=== 実行完了 ===")
