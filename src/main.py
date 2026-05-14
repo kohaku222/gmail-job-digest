@@ -69,6 +69,7 @@ def main() -> int:
         result=result,
         total_fetched=len(emails),
         model=model,
+        mention_user_id=os.environ.get("SLACK_MENTION_USER_ID") or None,
     )
     _save_state(run_start_unix)
 

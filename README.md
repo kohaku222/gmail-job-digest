@@ -82,6 +82,8 @@ uv run python scripts/get_gmail_token.py
 
 (任意) `Variables` タブで `CLAUDE_MODEL` を設定するとモデルを切替できます (デフォルト: `claude-haiku-4-5-20251001`).
 
+(任意) `SLACK_MENTION_USER_ID` Secret を設定すると, 親メッセージで自分自身をメンションします. SlackのDM一覧で自分のプロフィール → "..." → "メンバーIDをコピー" で取得した値 (`U` で始まる文字列) を登録. 「メンションのみ通知」設定でも確実に通知が届くようになります.
+
 ### 5. 動作確認
 
 リポジトリの **Actions** タブ → "Job Hunting Email Summary" → **Run workflow** で手動実行. Slack に通知が届けば成功.

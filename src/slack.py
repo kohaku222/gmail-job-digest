@@ -49,6 +49,7 @@ def _build_parent_blocks(
     total_fetched: int,
     model: str,
     overall_note: str,
+    mention_user_id: str | None = None,
 ) -> list[dict]:
     if visible_count == 0:
         title = ":mailbox_with_mail: 就活メール要約: 対応必要なメールなし"
@@ -63,6 +64,8 @@ def _build_parent_blocks(
     if low_count:
         counts.append(f":information_source: 参考 *{low_count}*")
     counts_str = " / ".join(counts) if counts else "_対応が必要なメールはありません_"
+    if mention_user_id:
+        counts_str = f"<@{mention_user_id}> {counts_str}"
 
     blocks: list[dict] = [
         {"type": "header", "text": {"type": "plain_text", "text": title, "emoji": True}},
@@ -97,7 +100,14 @@ def _build_email_blocks(a: EmailAnalysis) -> list[dict]:
     return [{"type": "section", "text": {"type": "mrkdwn", "text": "\n".join(lines)}}]
 
 
-def post(bot_token: str, channel: str, result: AnalysisResult, total_fetched: int, model: str) -> None:
+def post(
+    bot_token: str,
+    channel: str,
+    result: AnalysisResult,
+    total_fetched: int,
+    model: str,
+    mention_user_id: str | None = None,
+) -> None:
     sorted_analyses = sorted(result.analyses, key=lambda a: IMPORTANCE_ORDER.get(a.importance, 99))
     visible_all = [a for a in sorted_analyses if a.importance != "spam"]
     visible = visible_all[:MAX_VISIBLE_EMAILS]
@@ -116,8 +126,10 @@ def post(bot_token: str, channel: str, result: AnalysisResult, total_fetched: in
         total_fetched=total_fetched,
         model=model,
         overall_note=result.overall_note,
+        mention_user_id=mention_user_id,
     )
-    fallback = f"就活メール要約: 表示{len(visible)}件 / 取得{total_fetched}件"
+    mention_prefix = f"<@{mention_user_id}> " if mention_user_id else ""
+    fallback = f"{mention_prefix}就活メール要約: 表示{len(visible)}件 / 取得{total_fetched}件"
     parent_resp = _post(bot_token, channel, fallback, blocks=parent_blocks)
     parent_ts = parent_resp["ts"]
     logger.info("posted parent message, ts=%s", parent_ts)
