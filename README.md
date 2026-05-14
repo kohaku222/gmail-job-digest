@@ -1,6 +1,8 @@
 # 就活メール自動要約システム
 
-GitHub Actions で毎日 **JST 9:00 / 17:00** に動作し, Gmailの新着メールを Claude が要約して Slack に通知します.
+GitHub Actions で毎日 **JST 8:30 / 16:30** (cron指定. 数十分の遅延あり) に動作し, Gmailの新着メールを Claude が要約して Slack に通知します.
+
+通知は **親メッセージ1通 + 各メール1通ずつスレッド返信** という形式. 親メッセージで件数サマリが届くのでスマホ通知は1回, スレッドを開けば各メールに個別に :white_check_mark: リアクションで「対応済み」マーク可能です.
 
 ## 仕組み
 
@@ -8,20 +10,24 @@ GitHub Actions で毎日 **JST 9:00 / 17:00** に動作し, Gmailの新着メー
 GitHub Actions (cron)
    ├─ Gmail API: 前回実行以降のメール取得
    ├─ Claude API: 重要度判定 + 要約 (tool useでJSON出力)
-   ├─ Slack Webhook: Block Kit整形で投稿
+   ├─ Slack chat.postMessage: 親メッセージ + スレッドで各メール投稿
    └─ state.json をリポジトリに自動commit
 ```
 
 ## セットアップ手順
 
-### 1. Slack: Incoming Webhook URL を取得
+### 1. Slack: Bot Token を取得 + 通知先チャンネルにBotを招待
 
-1. https://api.slack.com/apps → "Create New App" → "From scratch"
-2. App名 (例: `job-summary`) とワークスペースを選択
-3. 左メニュー "Incoming Webhooks" → "Activate Incoming Webhooks" を ON
-4. "Add New Webhook to Workspace" → 通知先チャンネル選択 → "Allow"
-5. 表示された Webhook URL (`https://hooks.slack.com/services/...`) をコピー
-   → GitHub Secret `SLACK_WEBHOOK_URL` に登録
+1. Slackで通知先チャンネル (例: `#job-hunting`) を事前に作っておく
+2. https://api.slack.com/apps → "Create New App" → "From scratch"
+3. App名 (例: `job-summary`) とワークスペースを選択
+4. 左メニュー **OAuth & Permissions** → "Bot Token Scopes" に **`chat:write`** を追加
+5. ページ上部 **Install to Workspace** (または再インストール) で許可
+6. **Bot User OAuth Token** (`xoxb-...` で始まる) をコピー
+   → GitHub Secret `SLACK_BOT_TOKEN` に登録
+7. Slackの通知先チャンネルで `/invite @<botname>` を実行してBotを招待
+   → チャンネル名 (例: `#job-hunting`) を GitHub Secret `SLACK_CHANNEL` に登録
+8. スマホ通知設定: チャンネルを長押し → 通知 → **「すべての新着メッセージ」** にする
 
 ### 2. Anthropic: API キーと使用料上限を設定
 
@@ -63,11 +69,12 @@ uv run python scripts/get_gmail_token.py
 
 ### 4. GitHub Secrets に登録
 
-リポジトリの **Settings → Secrets and variables → Actions → New repository secret** で以下5つを登録:
+リポジトリの **Settings → Secrets and variables → Actions → New repository secret** で以下6つを登録:
 
 | Secret 名 | 値 |
 |---|---|
-| `SLACK_WEBHOOK_URL` | 手順1で取得 |
+| `SLACK_BOT_TOKEN` | 手順1で取得 (`xoxb-...`) |
+| `SLACK_CHANNEL` | 通知先チャンネル名 (例: `#job-hunting`) |
 | `ANTHROPIC_API_KEY` | 手順2で取得 |
 | `GMAIL_CLIENT_ID` | 手順3-2で表示 |
 | `GMAIL_CLIENT_SECRET` | 手順3-2で表示 |
@@ -79,7 +86,7 @@ uv run python scripts/get_gmail_token.py
 
 リポジトリの **Actions** タブ → "Job Hunting Email Summary" → **Run workflow** で手動実行. Slack に通知が届けば成功.
 
-それ以降は毎日 JST 9:00 / 17:00 に自動実行されます.
+それ以降は毎日 JST 8:30 / 16:30 (cron指定. GitHub Actionsの仕様で数十分遅延することあり) に自動実行されます.
 
 ## ローカル実行 (デバッグ用)
 
@@ -88,7 +95,8 @@ export GMAIL_CLIENT_ID=...
 export GMAIL_CLIENT_SECRET=...
 export GMAIL_REFRESH_TOKEN=...
 export ANTHROPIC_API_KEY=...
-export SLACK_WEBHOOK_URL=...
+export SLACK_BOT_TOKEN=xoxb-...
+export SLACK_CHANNEL=#job-hunting
 uv run python -m src.main
 ```
 
@@ -109,7 +117,7 @@ uv run python -m src.main
 │   ├── main.py            # エントリーポイント
 │   ├── gmail_client.py    # Gmail API
 │   ├── analyzer.py        # Claude API (tool use)
-│   └── slack.py           # Slack Webhook (Block Kit)
+│   └── slack.py           # Slack chat.postMessage (親+スレッド方式)
 ├── state.json             # 前回実行時刻 (workflowが自動更新)
 └── pyproject.toml
 ```
